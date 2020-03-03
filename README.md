@@ -4,7 +4,7 @@
 
 WIP.
 
-Sample project: \<https://neruthes.xyz/NottyExample/www/>.
+Sample project: \<[https://neruthes.xyz/NottyExample/www/](https://neruthes.xyz/NottyExample/www/)\>.
 
 ## Copyright
 
