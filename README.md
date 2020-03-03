@@ -4,6 +4,8 @@
 
 WIP.
 
+Sample project: \<https://neruthes.xyz/NottyExample/www/>.
+
 ## Copyright
 
 Copyright © 2020 Neruthes (neruthes.xyz)

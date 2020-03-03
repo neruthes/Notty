@@ -15,6 +15,10 @@ const crypto = require('crypto');
 const child_process = require('child_process');
 const exec = require('child_process').exec;
 
+if (fs.existsSync('.notty-home')) {
+    fs.writeFileSync('.notty-home', 'notty--' + pkg.version);
+};
+
 // ----------------------------------------
 // Utils
 // ----------------------------------------
@@ -242,16 +246,8 @@ app.init = function () {
     }, null, '\t'));
     var helloWorldNoteId = core.timenow();
     var initialDatabaseTemplate = { "notes": {} };
-    // initialDatabaseTemplate.notes[helloWorldNoteId] = {
-    //     id: helloWorldNoteId,
-    //     title: 'Sample Note',
-    //     md_Tags: [ 'hello', 'world' ]
-    // };
     fs.writeFileSync('notty-database.json', JSON.stringify(initialDatabaseTemplate, null, '\t'));
     console.log(`>\tProject "${projName}" initialized.`);
-    // core.saveNoteInStorage(helloWorldNoteId, noteDefaultText);
-    // core.recordNoteInDatabase(helloWorldNoteId, noteDefaultText);
-    // core.pullNoteLatestInfo(helloWorldNoteId);
     console.log(`>\tUse "${c.green}notty new${c.end}" to create your first note.`);
 };
 
@@ -308,16 +304,8 @@ app.last = function () {
 app.print = function () {
     if (!fs.existsSync('.notty-home')) { console.log(`>\t${c.red}Project does not exist.${c.end}`); return 1; };// Skip invalid dir
     var noteId = argv[1];
-    // core.loadConfig();
-    // core.loadDatabase();
     var txt = fs.readFileSync(`database/${noteId}.md`).toString();
     console.log(txt);
-    // core.openNoteInEditor(noteId, function (e, code) {
-    //     debug('core.openNoteInEditor: e, code', {e: e, code: code});
-    //     core.pullNoteLatestInfo(noteId);
-    //     console.log(`>\tYour note [${noteId}]\n>\t"${c.green}${core.pullNoteLatestInfo(noteId).title}${c.end}" has been saved.`);
-    //     console.log(core.noteSummaryStd(nottyDatabase.notes_index.filter(x => x.id = noteId)[0], noteId));
-    // });
 };
 
 app.find = function () {
@@ -368,7 +356,7 @@ app.build = function () {
         return [noteId.slice(0, 10), noteId.slice(11).replace(/(\d{2})/g, ':$1').slice(1)].join(' ');
     };
     var html = {};
-    ['index','tags','note','item_note','tag','item_tag','inline_tag'].map(function (x) {
+    ['index','tags','note','item_note','item_note_forIndex','tag','item_tag','inline_tag','inline_tag_forIndex'].map(function (x) {
         html[x] = fs.readFileSync(`${__dirname}/html-templates/${x}.html`).toString();
     });
     // Note
@@ -376,6 +364,7 @@ app.build = function () {
         var noteId = noteInfo.id;
         var noteObj = core.parseNoteRawStr(core.getNoteRawStr(noteId));
         var noteHtml = core.renderHtml(html.note, {
+            __VER__: pkg.version,
             __ID__: noteId,
             __TIME__: getTimeStringForNote(noteId),
             __TITLE__: noteObj.title,
@@ -388,15 +377,16 @@ app.build = function () {
     // Index
     var noteItemsInIndexPage = nottyDatabase.notes_index.slice(0).reverse().map(function (noteInfo) {
         var noteId = noteInfo.id;
-        var noteHtml = core.renderHtml(html.item_note, {
+        var noteHtml = core.renderHtml(html.item_note_forIndex, {
             __ID__: noteId,
             __TIME__: getTimeStringForNote(noteId),
             __TITLE__: noteInfo.title,
-            __TAGS__: noteInfo.md_Tags.map(tag => core.renderHtml(html.inline_tag, {__TAG__: tag})).join(''),
+            __TAGS__: noteInfo.md_Tags.map(tag => core.renderHtml(html.inline_tag_forIndex, {__TAG__: tag})).join(''),
         });
         return noteHtml;
     }).join('');
     fs.writeFileSync(`www/index.html`, core.renderHtml(html.index, {
+        __VER__: pkg.version,
         __SITENAME__: config.name,
         __CONTENT__: noteItemsInIndexPage
     }));
@@ -412,6 +402,7 @@ app.build = function () {
             return noteHtml;
         }).join('');
         fs.writeFileSync(`www/tag/${tagObj.name}.html`, core.renderHtml(html.tag, {
+            __VER__: pkg.version,
             __SITENAME__: config.name,
             __TAG__: tagObj.name,
             __COUNT__: tagObj.count,
@@ -423,6 +414,7 @@ app.build = function () {
         });
     }).join('');
     fs.writeFileSync(`www/tags.html`, core.renderHtml(html.tags, {
+        __VER__: pkg.version,
         __SITENAME__: config.name,
         __CONTENT__: tagItemsInTagsPage
     }));
