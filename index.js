@@ -47,7 +47,7 @@ const ulog = function (str) {
 // Templates
 // ----------------------------------------
 
-const noteDefaultText = `Title: This is an optional title\nTags: sample-tag-01 sample-tag-02\n------\n\nUse 6 hyphens to declare metadata area. Omitting metadata is ok.`;
+const noteDefaultText = `Title: This is an optional title\nTags: tag1 tag2\n------\n\nUse 6 hyphens to declare metadata area. Omitting metadata is ok.`;
 
 const commonSeperationLine = '\n--------------------------------\n';
 
@@ -204,7 +204,7 @@ ${c.green}Notty${c.end} (v${pkg.version})
 Copyright © 2020 Neruthes <i@neruthes.xyz>
 
     Notty is a free software (GNU AGPL 3.0). The source code is
-    available at <https://github.com/neruthes/notty>. See license
+    available at <https://github.com/neruthes/Notty>. See license
     information in the source code repository.
 -----------------------------------------------------------------
 
@@ -368,9 +368,10 @@ app.build = function () {
         return [noteId.slice(0, 10), noteId.slice(11).replace(/(\d{2})/g, ':$1').slice(1)].join(' ');
     };
     var html = {};
-    ['note','index','tag','i_note','i_tag'].map(function (x) {
+    ['index','tags','note','item_note','tag','item_tag','inline_tag'].map(function (x) {
         html[x] = fs.readFileSync(`${__dirname}/html-templates/${x}.html`).toString();
     });
+    // Note
     nottyDatabase.notes_index.map(function (noteInfo) {
         var noteId = noteInfo.id;
         var noteObj = core.parseNoteRawStr(core.getNoteRawStr(noteId));
@@ -379,24 +380,51 @@ app.build = function () {
             __TIME__: getTimeStringForNote(noteId),
             __TITLE__: noteObj.title,
             __SITENAME__: config.name,
-            __TAGS__: noteObj.md_Tags.map(tag => core.renderHtml(html.i_tag, {__TAG__: tag})).join(''),
+            __TAGS__: noteObj.md_Tags.map(tag => core.renderHtml(html.inline_tag, {__TAG__: tag})).join(''),
             __CONTENT__: noteObj.content.trim().replace(/\n+/g, '\n').split('\n').map(x => `<p>${x}</p>`).join('')
         });
         fs.writeFileSync(`www/notes/${noteId}.html`, noteHtml);
     });
+    // Index
     var noteItemsInIndexPage = nottyDatabase.notes_index.slice(0).reverse().map(function (noteInfo) {
         var noteId = noteInfo.id;
-        var noteHtml = core.renderHtml(html.i_note, {
+        var noteHtml = core.renderHtml(html.item_note, {
             __ID__: noteId,
             __TIME__: getTimeStringForNote(noteId),
             __TITLE__: noteInfo.title,
-            __TAGS__: noteInfo.md_Tags.map(tag => core.renderHtml(html.i_tag, {__TAG__: tag})).join(''),
+            __TAGS__: noteInfo.md_Tags.map(tag => core.renderHtml(html.inline_tag, {__TAG__: tag})).join(''),
         });
         return noteHtml;
     }).join('');
     fs.writeFileSync(`www/index.html`, core.renderHtml(html.index, {
         __SITENAME__: config.name,
         __CONTENT__: noteItemsInIndexPage
+    }));
+    // Tags
+    var tagItemsInTagsPage = nottyDatabase.tags_index.map(function (tagObj) { // tagObj = { name: 'tag', count: 1 }
+        var tagDetailPageContent = nottyDatabase.notes_index.filter(noteObj => noteObj.md_Tags.indexOf(tagObj.name) > -1).map(function (noteInfo) {
+            var noteHtml = core.renderHtml(html.item_note, {
+                __ID__: noteInfo.id,
+                __TIME__: getTimeStringForNote(noteInfo.id),
+                __TITLE__: noteInfo.title,
+                __TAGS__: noteInfo.md_Tags.map(tag => core.renderHtml(html.inline_tag, {__TAG__: tag})).join(''),
+            });
+            return noteHtml;
+        }).join('');
+        fs.writeFileSync(`www/tag/${tagObj.name}.html`, core.renderHtml(html.tag, {
+            __SITENAME__: config.name,
+            __TAG__: tagObj.name,
+            __COUNT__: tagObj.count,
+            __CONTENT__: tagDetailPageContent,
+        }))
+        return core.renderHtml(html.item_tag, {
+            __TAG__: tagObj.name,
+            __COUNT__: tagObj.count
+        });
+    }).join('');
+    fs.writeFileSync(`www/tags.html`, core.renderHtml(html.tags, {
+        __SITENAME__: config.name,
+        __CONTENT__: tagItemsInTagsPage
     }));
     console.log(`>\tNotebook built. See ${c.green}"/www"${c.end} directory.`);
 };

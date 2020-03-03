@@ -28,6 +28,7 @@ html, body {
 }
 .grand-body {
     background: #FFF;
+    min-height: 60vh;
 }
 .grand-footer {
     color: #888;
@@ -54,6 +55,12 @@ html, body {
     padding-bottom: 80px;
 }
 /* .. */
+.grand-header h1 {
+    font-size: 36px;
+    line-height: 48px;
+    padding: 0;
+    margin: 0;
+}
 .grand-header a {
     color: #000;
     text-decoration: none;
@@ -75,7 +82,7 @@ html, body {
 
 .note-metadata {
     font-size: 16px;
-    color: #888;
+    color: #666;
     line-height: 32px;
 }
 
@@ -83,30 +90,64 @@ html, body {
     font-size: 20px;
 }
 
-/* Component: i_note */
+/* Component: item_tag */
 
-.i_note {
+.item_tag {
     border-bottom: 1px solid #DDD;
     padding: 16px 0;
 }
-.i_note-title {
+.item_tag-title {
+    font-size: 24px;
+    line-height: 34px;
+}
+.item_tag-anchor {
+    font-weight: 600;
+    color: #000;
+    text-decoration: none;
+    background: #F0F0F0;
+    border-radius: 4px;
+    display: inline-block;
+    padding: 0 8px;
+    margin: 0 8px 0 0;
+}
+.item_tag-anchor:hover {
+    background: #E4E4E4;
+}
+.item_tag-count {
+    color: #888;
+}
+.item_tag-count::before {
+    content: "(";
+}
+.item_tag-count::after {
+    content: ")";
+}
+
+/* Component: item_note */
+
+.item_note {
+    color: #666;
+    border-bottom: 1px solid #DDD;
+    padding: 16px 0;
+}
+.item_note-title {
     font-size: 24px;
     line-height: 34px;
     font-weight: 600;
 }
-.i_note-title a {
+.item_note-title a {
     color: #000;
     text-decoration: none;
 }
-.i_note-title a:hover {
+.item_note-title a:hover {
     color: #16D;
 }
 
-/* Component: i_tag */
+/* Component: inline_tag */
 
-.i_tag {}
-.i_tag a {
-    color: #000;
+.inline_tag {}
+.inline_tag a {
+    color: #666;
     line-height: 26px;
     text-decoration: none;
     background: #F0F0F0;
@@ -115,7 +156,7 @@ html, body {
     padding: 0 8px;
     margin: 0 5px 0 0;
 }
-.i_tag a:hover {
+.inline_tag a:hover {
     /* color: #000; */
     background: #E4E4E4;
 }
