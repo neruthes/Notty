@@ -1,6 +1,6 @@
 {
   "name": "notty-js",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Notebook app",
   "main": "index.js",
   "bin": {

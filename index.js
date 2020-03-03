@@ -301,6 +301,17 @@ app.last = function () {
     app._edit(noteId);
 };
 
+app.rm = function () {
+    if (!fs.existsSync('.notty-home')) { console.log(`>\t${c.red}Project does not exist.${c.end}`); return 1; };// Skip invalid dir
+    var noteId = argv[1];
+    core.loadDatabase();
+    var title = nottyDatabase.notes[noteId].title;
+    delete nottyDatabase.notes[noteId];
+    fs.writeFileSync('notty-database.json', JSON.stringify({notes: nottyDatabase.notes}, null, '\t'));
+    fs.unlinkSync(`database/${noteId}.md`);
+    console.log(`>\tDeleted [${noteId}] "${c.green}${title}${c.end}".`);
+};
+
 app.print = function () {
     if (!fs.existsSync('.notty-home')) { console.log(`>\t${c.red}Project does not exist.${c.end}`); return 1; };// Skip invalid dir
     var noteId = argv[1];
@@ -435,6 +446,8 @@ const subcommandMapTable = {
 
     edit: 'edit',
     e: 'edit',
+
+    rm: 'rm',
 
     last: 'last',
     l: 'last',
