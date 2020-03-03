@@ -1,0 +1,29 @@
+{
+	"notes": {
+		"2020-03-03-124504": {
+			"id": "2020-03-03-124504",
+			"title": "This is an optional title",
+			"md_Tags": [
+				"sample-tag-01",
+				"sample-tag-02"
+			]
+		},
+		"2020-03-03-124508": {
+			"id": "2020-03-03-124508",
+			"title": "This is an optional title",
+			"md_Tags": [
+				"hello",
+				"world",
+				"literature"
+			]
+		},
+		"2020-03-03-124717": {
+			"id": "2020-03-03-124717",
+			"title": "New note",
+			"md_Tags": [
+				"sample-tag-01",
+				"sample-tag-02"
+			]
+		}
+	}
+}

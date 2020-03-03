@@ -1,0 +1,23 @@
+{
+  "name": "notty-js",
+  "version": "0.1.0",
+  "description": "Notebook app",
+  "main": "index.js",
+  "bin": {
+    "notty": "index.js",
+    "notty-debug": "index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://neruthes@github.com/neruthes/notty.git"
+  },
+  "author": "Neruthes <neruthes.xyz>",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/neruthes/notty/issues"
+  },
+  "homepage": "https://github.com/neruthes/notty#readme"
+}
