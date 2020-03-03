@@ -1,0 +1,121 @@
+* {
+    box-sizing: border-box;
+    text-rendering: optimizeLegibility;
+}
+
+/* -------------------------------- */
+.ff-monospace {
+    font-family: 'JetBrains Sans', 'Source Code Pro', 'Inconsolata', 'Menlo', monospace;
+}
+/* -------------------------------- */
+
+html, body {
+    font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif, 'PingFang SC', 'Noto Sans CJK SC', 'Source Han Sans CN', 'Hiragino Sans', 'Hiragino Sans GB', 'Microsoft YaHei';
+    font-size: 16px;
+    color: #000;
+    background: #F8F8F8;
+    padding: 0;
+    margin: 0;
+}
+
+.grand-header,
+.grand-body,
+.grand-footer {
+    padding: 1px 0;
+}
+.grand-header {
+    background: #FFF;
+}
+.grand-body {
+    background: #FFF;
+}
+.grand-footer {
+    color: #888;
+    background: #F8F8F8;
+}
+.grand-header-inner,
+.grand-body-inner,
+.grand-footer-inner {
+    max-width: 800px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin: 0 auto;
+}
+.grand-header-inner {
+    padding-top: 20px;
+    padding-bottom: 0px;
+}
+.grand-body-inner {
+    padding-top: 20px;
+    padding-bottom: 80px;
+}
+.grand-footer-inner {
+    padding-top: 60px;
+    padding-bottom: 80px;
+}
+/* .. */
+.grand-header a {
+    color: #000;
+    text-decoration: none;
+}
+.grand-header a:hover {
+    color: #16D;
+    text-decoration: none;
+}
+.grand-footer a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+/* Page: Note */
+
+.note-title h2 {
+    font-size: 30px;
+}
+
+.note-metadata {
+    font-size: 16px;
+    color: #888;
+    line-height: 32px;
+}
+
+.note-content p {
+    font-size: 20px;
+}
+
+/* Component: i_note */
+
+.i_note {
+    border-bottom: 1px solid #DDD;
+    padding: 16px 0;
+}
+.i_note-title {
+    font-size: 24px;
+    line-height: 34px;
+    font-weight: 600;
+}
+.i_note-title a {
+    color: #000;
+    text-decoration: none;
+}
+.i_note-title a:hover {
+    color: #16D;
+}
+
+/* Component: i_tag */
+
+.i_tag {}
+.i_tag a {
+    color: #000;
+    line-height: 26px;
+    text-decoration: none;
+    background: #F0F0F0;
+    border-radius: 4px;
+    display: inline-block;
+    padding: 0 8px;
+    margin: 0 5px 0 0;
+}
+.i_tag a:hover {
+    /* color: #000; */
+    background: #E4E4E4;
+}

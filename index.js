@@ -11,6 +11,7 @@ const pkg = require('./package.json');
 var config = undefined;
 
 const fs = require('fs');
+const crypto = require('crypto');
 const child_process = require('child_process');
 const exec = require('child_process').exec;
 
@@ -57,6 +58,12 @@ const commonSeperationLine = '\n--------------------------------\n';
 var nottyDatabase = null;
 
 const core = {};
+
+core.renderHtml = function (template, vars) {
+    return template.replace(/__[_\w]+__/g, function (word) {
+        return vars[word];
+    });
+};
 
 core.loadConfig = function () {
     config = JSON.parse(fs.readFileSync('notty-config.json').toString());
@@ -219,6 +226,7 @@ app.init = function () {
         console.log('>\tProject already exists.');
         return 1;
     };
+    fs.writeFileSync('.gitignore', 'www');
     var projName = process.cwd().replace(/^\//, '').split('/').reverse()[0];
     var randKey = (new Array(3)).fill(1).map(x => Math.random().toString(36).slice(2)).join('');
     exec(
@@ -341,6 +349,57 @@ app.tags = function () {
     console.log(`Tag             Count` + commonSeperationLine + result.join('\n') + titleBar);
 };
 
+app.build = function () {
+    if (!fs.existsSync('.notty-home')) { console.log(`>\t${c.red}Project does not exist.${c.end}`); return 1; };// Skip invalid dir
+    core.loadConfig();
+    core.loadDatabase();
+    exec(`mkdir www/tags www/notes; touch www/tags/.gitkepp www/notes/.gitkepp`);
+    fs.writeFileSync('www/custom.css', '');
+    fs.writeFileSync('www/base.css', fs.readFileSync(`${__dirname}/html-templates/base.css`));
+
+    const getKeyForNote = function (noteId) {
+        return crypto.createHash('sha256').update(
+            '7f71833a-370c-4729-be3e-5a460917231f--' +
+            config.deployKey +
+            noteId
+        ).digest('base64').replace(/[\w\d]/g, '').slice(20);
+    };
+    const getTimeStringForNote = function (noteId) {
+        return [noteId.slice(0, 10), noteId.slice(11).replace(/(\d{2})/g, ':$1').slice(1)].join(' ');
+    };
+    var html = {};
+    ['note','index','tag','i_note','i_tag'].map(function (x) {
+        html[x] = fs.readFileSync(`${__dirname}/html-templates/${x}.html`).toString();
+    });
+    nottyDatabase.notes_index.map(function (noteInfo) {
+        var noteId = noteInfo.id;
+        var noteObj = core.parseNoteRawStr(core.getNoteRawStr(noteId));
+        var noteHtml = core.renderHtml(html.note, {
+            __ID__: noteId,
+            __TIME__: getTimeStringForNote(noteId),
+            __TITLE__: noteObj.title,
+            __SITENAME__: config.name,
+            __TAGS__: noteObj.md_Tags.map(tag => core.renderHtml(html.i_tag, {__TAG__: tag})).join(''),
+            __CONTENT__: noteObj.content.trim().replace(/\n+/g, '\n').split('\n').map(x => `<p>${x}</p>`).join('')
+        });
+        fs.writeFileSync(`www/notes/${noteId}.html`, noteHtml);
+    });
+    var noteItemsInIndexPage = nottyDatabase.notes_index.slice(0).reverse().map(function (noteInfo) {
+        var noteId = noteInfo.id;
+        var noteHtml = core.renderHtml(html.i_note, {
+            __ID__: noteId,
+            __TIME__: getTimeStringForNote(noteId),
+            __TITLE__: noteInfo.title,
+            __TAGS__: noteInfo.md_Tags.map(tag => core.renderHtml(html.i_tag, {__TAG__: tag})).join(''),
+        });
+        return noteHtml;
+    }).join('');
+    fs.writeFileSync(`www/index.html`, core.renderHtml(html.index, {
+        __SITENAME__: config.name,
+        __CONTENT__: noteItemsInIndexPage
+    }));
+    console.log(`>\tNotebook built. See ${c.green}"/www"${c.end} directory.`);
+};
 
 // ----------------------------------------
 // Entry
@@ -364,7 +423,11 @@ const subcommandMapTable = {
     p: 'print',
 
     find: 'find',
-    tags: 'tags'
+
+    tags: 'tags',
+
+    build: 'build',
+    b: 'build'
 };
 
 if (argv[0]) {
