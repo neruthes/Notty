@@ -76,7 +76,12 @@ core.loadConfig = function () {
 core.loadDatabase = function () {
     if (!nottyDatabase) {
         nottyDatabase = JSON.parse(fs.readFileSync('notty-database.json').toString());
-        nottyDatabase.notes_index = Object.keys(nottyDatabase.notes).sort().map(key => nottyDatabase.notes[key]);
+        nottyDatabase.notes_index = Object.keys(nottyDatabase.notes).sort().map(function (noteId) {
+            nottyDatabase.notes[noteId].md_Tags = nottyDatabase.notes[noteId].md_Tags.map(function (tag) {
+                return tag.toLowerCase();
+            });
+            return nottyDatabase.notes[noteId]
+        });
         debug('nottyDatabase.notes_index', nottyDatabase.notes_index);
         nottyDatabase.tags = {};
         nottyDatabase.notes_index.map(function (obj) {
@@ -110,7 +115,7 @@ core.recordNoteInDatabase = function (noteId, noteText) {
     nottyDatabase.notes[noteId] = {
         id: noteId,
         title: noteObj.title,
-        md_Tags: noteObj.md_Tags
+        md_Tags: noteObj.md_Tags.map(x => x.toLowerCase())
     };
     fs.writeFileSync('notty-database.json', JSON.stringify({
         notes: nottyDatabase.notes
@@ -168,7 +173,7 @@ core.parseNoteRawStr = function (noteText) {
         noteObj.title = firstLine.slice(0, 50) + (firstLine.length > 49 ? '...' : '');
         noteText.split(slicer)[0].split('\n').map(function (x) {
             if (x.indexOf('Tags: ') === 0) {
-                noteObj.md_Tags = x.slice(6).split(' ');
+                noteObj.md_Tags = x.slice(6).split(' ').map(x => x.toLowerCase());
             };
             if (x.indexOf('Title: ') === 0) {
                 noteObj.title = x.slice(7);
@@ -181,10 +186,16 @@ debug('core.parseNoteRawStr(noteDefaultText)', core.parseNoteRawStr(noteDefaultT
 
 core.serializeNote = function (noteObj) {
     if (noteObj.hasMetadata) {
-        return `Title: ${noteObj.title}\nTags: ${noteObj.md_Tags.join(' ')}\n------\n\n` + noteObj.content
+        return `Title: ${noteObj.title}\nTags: ${noteObj.md_Tags.sort().join(' ')}\n------\n\n` + noteObj.content
     } else {
         return noteObj.content;
     };
+};
+
+core.sanitizeNote = function (noteId) {
+    var noteObj = core.parseNoteRawStr(core.getNoteRawStr(noteId));
+    var result = core.serializeNote(noteObj);
+    fs.writeFileSync(`database/${noteId}.md`, result);
 };
 
 core.noteSummaryStd = function (noteObj, noteId) {
@@ -283,8 +294,9 @@ app._edit = function (noteId) {
     core.openNoteInEditor(noteId, function (e, code) {
         debug('core.openNoteInEditor: e, code', {e: e, code: code});
         core.pullNoteLatestInfo(noteId);
+        core.sanitizeNote(noteId);
         console.log(`>\tYour note [${noteId}]\n>\t"${c.green}${core.pullNoteLatestInfo(noteId).title}${c.end}" has been saved.`);
-        console.log(core.noteSummaryStd(nottyDatabase.notes_index.filter(x => x.id = noteId)[0], noteId));
+        console.log(core.noteSummaryStd(nottyDatabase.notes[noteId], noteId));
     });
 };
 
@@ -380,7 +392,7 @@ app.build = function () {
             __TIME__: getTimeStringForNote(noteId),
             __TITLE__: noteObj.title,
             __SITENAME__: config.name,
-            __TAGS__: noteObj.md_Tags.map(tag => core.renderHtml(html.inline_tag, {__TAG__: tag})).join(''),
+            __TAGS__: noteObj.md_Tags.map(tag => core.renderHtml(html.inline_tag, {__TAG__: tag.toLowerCase})).join(''),
             __CONTENT__: noteObj.content.trim().replace(/\n+/g, '\n').split('\n').map(x => `<p>${x}</p>`).join('')
         });
         fs.writeFileSync(`www/notes/${noteId}.html`, noteHtml);
@@ -392,7 +404,7 @@ app.build = function () {
             __ID__: noteId,
             __TIME__: getTimeStringForNote(noteId),
             __TITLE__: noteInfo.title,
-            __TAGS__: noteInfo.md_Tags.map(tag => core.renderHtml(html.inline_tag_forIndex, {__TAG__: tag})).join(''),
+            __TAGS__: noteInfo.md_Tags.map(tag => core.renderHtml(html.inline_tag_forIndex, {__TAG__: tag.toLowerCase()})).join(''),
         });
         return noteHtml;
     }).join('');
@@ -408,19 +420,19 @@ app.build = function () {
                 __ID__: noteInfo.id,
                 __TIME__: getTimeStringForNote(noteInfo.id),
                 __TITLE__: noteInfo.title,
-                __TAGS__: noteInfo.md_Tags.map(tag => core.renderHtml(html.inline_tag, {__TAG__: tag})).join(''),
+                __TAGS__: noteInfo.md_Tags.map(tag => core.renderHtml(html.inline_tag, {__TAG__: tag.toLowerCase()})).join(''),
             });
             return noteHtml;
         }).join('');
         fs.writeFileSync(`www/tag/${tagObj.name}.html`, core.renderHtml(html.tag, {
             __VER__: pkg.version,
             __SITENAME__: config.name,
-            __TAG__: tagObj.name,
+            __TAG__: tagObj.name.toLowerCase(),
             __COUNT__: tagObj.count,
             __CONTENT__: tagDetailPageContent,
         }))
         return core.renderHtml(html.item_tag, {
-            __TAG__: tagObj.name,
+            __TAG__: tagObj.name.toLowerCase(),
             __COUNT__: tagObj.count
         });
     }).join('');
