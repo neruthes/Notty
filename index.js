@@ -18,6 +18,10 @@ const exec = require('child_process').exec;
 // Utils
 // ----------------------------------------
 
+const rightpad = function (str, len, pad) {
+    return (str.length > len) ? str : ( str+(new Array(len-str.length)).fill(pad).join('') );
+};
+
 const c = {
     end: '\x1b[0m',
     red: '\x1b[31m',
@@ -61,8 +65,26 @@ core.loadConfig = function () {
 core.loadDatabase = function () {
     if (!nottyDatabase) {
         nottyDatabase = JSON.parse(fs.readFileSync('notty-database.json').toString());
-        nottyDatabase.index = Object.keys(nottyDatabase.notes).sort().map(key => nottyDatabase.notes[key]);
-        debug('nottyDatabase.index', nottyDatabase.index);
+        nottyDatabase.notes_index = Object.keys(nottyDatabase.notes).sort().map(key => nottyDatabase.notes[key]);
+        debug('nottyDatabase.notes_index', nottyDatabase.notes_index);
+        nottyDatabase.tags = {};
+        nottyDatabase.notes_index.map(function (obj) {
+            obj.md_Tags.map(function (tag) {
+                if (Object.keys(nottyDatabase.tags).indexOf(tag) > -1) {
+                    nottyDatabase.tags[tag] = nottyDatabase.tags[tag] + 1;
+                } else {
+                    nottyDatabase.tags[tag] = 1;
+                };
+            })
+        });
+        debug('nottyDatabase.tags', nottyDatabase.tags);
+        nottyDatabase.tags_index = Object.keys(nottyDatabase.tags).sort().map(function (x) {
+            return {
+                name: x,
+                count: nottyDatabase.tags[x]
+            };
+        });
+        debug('nottyDatabase.tags_index', nottyDatabase.tags_index);
     };
 };
 
@@ -212,16 +234,16 @@ app.init = function () {
     }, null, '\t'));
     var helloWorldNoteId = core.timenow();
     var initialDatabaseTemplate = { "notes": {} };
-    initialDatabaseTemplate.notes[helloWorldNoteId] = {
-        id: helloWorldNoteId,
-        title: 'Sample Note',
-        md_Tags: [ 'hello', 'world' ]
-    };
+    // initialDatabaseTemplate.notes[helloWorldNoteId] = {
+    //     id: helloWorldNoteId,
+    //     title: 'Sample Note',
+    //     md_Tags: [ 'hello', 'world' ]
+    // };
     fs.writeFileSync('notty-database.json', JSON.stringify(initialDatabaseTemplate, null, '\t'));
     console.log(`>\tProject "${projName}" initialized.`);
-    core.saveNoteInStorage(helloWorldNoteId, noteDefaultText);
-    core.recordNoteInDatabase(helloWorldNoteId, noteDefaultText);
-    core.pullNoteLatestInfo(helloWorldNoteId);
+    // core.saveNoteInStorage(helloWorldNoteId, noteDefaultText);
+    // core.recordNoteInDatabase(helloWorldNoteId, noteDefaultText);
+    // core.pullNoteLatestInfo(helloWorldNoteId);
     console.log(`>\tUse "${c.green}notty new${c.end}" to create your first note.`);
 };
 
@@ -230,7 +252,7 @@ app.ls = function () {
     core.loadConfig();
     var noteId = core.timenow();
     core.loadDatabase();
-    var result = nottyDatabase.index.map(function (x, i) {
+    var result = nottyDatabase.notes_index.map(function (x, i) {
         return core.noteSummaryStd(core.parseNoteDbInfoByObj(x), x.id);
     });
     var titleBar = `\n\n>\tFound ${c.green}${result.length}${c.end} notes as shown above.`
@@ -258,9 +280,9 @@ app._edit = function (noteId) {
         debug('core.openNoteInEditor: e, code', {e: e, code: code});
         core.pullNoteLatestInfo(noteId);
         console.log(`>\tYour note [${noteId}]\n>\t"${c.green}${core.pullNoteLatestInfo(noteId).title}${c.end}" has been saved.`);
-        console.log(core.noteSummaryStd(nottyDatabase.index.filter(x => x.id = noteId)[0], noteId));
+        console.log(core.noteSummaryStd(nottyDatabase.notes_index.filter(x => x.id = noteId)[0], noteId));
     });
-}
+};
 
 app.edit = function () {
     if (!fs.existsSync('.notty-home')) { console.log(`>\t${c.red}Project does not exist.${c.end}`); return 1; };// Skip invalid dir
@@ -271,8 +293,23 @@ app.edit = function () {
 app.last = function () {
     if (!fs.existsSync('.notty-home')) { console.log(`>\t${c.red}Project does not exist.${c.end}`); return 1; };// Skip invalid dir
     core.loadDatabase();
-    var noteId = nottyDatabase.index.slice(0).reverse()[0].id;
+    var noteId = nottyDatabase.notes_index.slice(0).reverse()[0].id;
     app._edit(noteId);
+};
+
+app.print = function () {
+    if (!fs.existsSync('.notty-home')) { console.log(`>\t${c.red}Project does not exist.${c.end}`); return 1; };// Skip invalid dir
+    var noteId = argv[1];
+    // core.loadConfig();
+    // core.loadDatabase();
+    var txt = fs.readFileSync(`database/${noteId}.md`).toString();
+    console.log(txt);
+    // core.openNoteInEditor(noteId, function (e, code) {
+    //     debug('core.openNoteInEditor: e, code', {e: e, code: code});
+    //     core.pullNoteLatestInfo(noteId);
+    //     console.log(`>\tYour note [${noteId}]\n>\t"${c.green}${core.pullNoteLatestInfo(noteId).title}${c.end}" has been saved.`);
+    //     console.log(core.noteSummaryStd(nottyDatabase.notes_index.filter(x => x.id = noteId)[0], noteId));
+    // });
 };
 
 app.find = function () {
@@ -280,7 +317,7 @@ app.find = function () {
     core.loadDatabase();
     var crit = argv[1];
     var tag = crit.slice(1);
-    var result = nottyDatabase.index.filter(function (x) {
+    var result = nottyDatabase.notes_index.filter(function (x) {
         if (crit[0] === ':') { // Tag only
             if (x.md_Tags.indexOf(tag) !== -1) { return true; };
         } else { // Including title
@@ -294,13 +331,16 @@ app.find = function () {
     console.log(commonSeperationLine + result.join('\n') + titleBar);
 };
 
-app.update = function () {
+app.tags = function () {
     if (!fs.existsSync('.notty-home')) { console.log(`>\t${c.red}Project does not exist.${c.end}`); return 1; };// Skip invalid dir
-    var noteId = argv[1].replace('.md', '');
-    var noteObj = core.pullNoteLatestInfo(noteId);
-    console.log(`>\tUpdated:`);
-    console.log(core.noteSummaryStd(noteObj, noteId));
+    core.loadDatabase();
+    var result = nottyDatabase.tags_index.map(function (tagInfo) {
+        return `${rightpad(tagInfo.name, 16, ' ')}${c.green}${tagInfo.count}${c.end}`;
+    });
+    var titleBar = `\n\n>\tFound ${c.green}${result.length}${c.end} tags as shown above.`
+    console.log(`Tag             Count` + commonSeperationLine + result.join('\n') + titleBar);
 };
+
 
 // ----------------------------------------
 // Entry
@@ -320,9 +360,11 @@ const subcommandMapTable = {
     last: 'last',
     l: 'last',
 
-    find: 'find',
+    print: 'print',
+    p: 'print',
 
-    update: 'update'
+    find: 'find',
+    tags: 'tags'
 };
 
 if (argv[0]) {
