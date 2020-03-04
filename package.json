@@ -1,6 +1,6 @@
 {
-  "name": "notty-js",
-  "version": "0.1.4",
+  "name": "notty",
+  "version": "0.1.5",
   "description": "CLI notebook app",
   "main": "index.js",
   "bin": {

@@ -11,7 +11,7 @@ Sample project: \<[https://neruthes.xyz/NottyExample/www/](https://neruthes.xyz/
 ### 1. Install
 
 ```
-$ npm install notty-js -g
+$ npm install notty -g
 ```
 
 ### 2. Initialize
