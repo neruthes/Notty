@@ -454,8 +454,11 @@ app.build = function () {
 
 const subcommandMapTable = {
     help: 'help',
+    h: 'help',
+
     init: 'init',
     ls: 'ls',
+    tags: 'tags',
 
     new: 'new',
     n: 'new',
@@ -463,18 +466,16 @@ const subcommandMapTable = {
     edit: 'edit',
     e: 'edit',
 
-    rm: 'rm',
-
     last: 'last',
     l: 'last',
+
+    rm: 'rm',
 
     print: 'print',
     p: 'print',
 
     find: 'find',
     f: 'find',
-
-    tags: 'tags',
 
     build: 'build',
     b: 'build'
