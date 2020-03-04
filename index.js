@@ -271,7 +271,7 @@ app.ls = function () {
         return core.noteSummaryStd(core.parseNoteDbInfoByObj(x), x.id);
     });
     var titleBar = `\n\n>\tFound ${c.green}${result.length}${c.end} notes as shown above.`
-    console.log(commonSeperationLine + result.join('\n') + titleBar);
+    console.log(commonSeperationLine + result.join('\n') + commonSeperationLine + titleBar);
 };
 
 app.new = function () {
@@ -295,8 +295,8 @@ app._edit = function (noteId) {
         debug('core.openNoteInEditor: e, code', {e: e, code: code});
         core.pullNoteLatestInfo(noteId);
         core.sanitizeNote(noteId);
-        console.log(`>\tYour note [${noteId}]\n>\t"${c.green}${core.pullNoteLatestInfo(noteId).title}${c.end}" has been saved.`);
-        console.log(core.noteSummaryStd(nottyDatabase.notes[noteId], noteId));
+        console.log(`\n>\tYour note [${noteId}]\n>\t"${c.green}${core.pullNoteLatestInfo(noteId).title}${c.end}" has been saved.\n` + commonSeperationLine);
+        // console.log(core.noteSummaryStd(nottyDatabase.notes[noteId], noteId) + commonSeperationLine);
     });
 };
 
@@ -334,20 +334,24 @@ app.print = function () {
 app.find = function () {
     if (!fs.existsSync('.notty-home')) { console.log(`>\t${c.red}Project does not exist.${c.end}`); return 1; };// Skip invalid dir
     core.loadDatabase();
-    var crit = argv[1];
-    var tag = crit.slice(1);
-    var result = nottyDatabase.notes_index.filter(function (x) {
-        if (crit[0] === ':') { // Tag only
-            if (x.md_Tags.indexOf(tag) !== -1) { return true; };
-        } else { // Including title
-            if (x.md_Tags.indexOf(crit) !== -1) { return true; };
-            if (x.title.toLowerCase().indexOf(crit.toLowerCase()) !== -1) { return true; };
-        };
-    }).map(function (x) {
+    var crits = argv.slice(1);
+    var tmpResult = nottyDatabase.notes_index;
+    for (var i = 0; i < crits.length; i++) {
+        var crit = crits[i];
+        tmpResult = tmpResult.filter(function (x) {
+            if (crit[0] === ':') { // Tag only
+                if (x.md_Tags.indexOf(crit.slice(1)) !== -1) { return true; };
+            } else { // Including title
+                if (x.md_Tags.indexOf(crit) !== -1) { return true; };
+                if (x.title.toLowerCase().indexOf(crit.toLowerCase()) !== -1) { return true; };
+            };
+        });
+    };
+    var result = tmpResult.map(function (x) {
         return core.noteSummaryStd(x, x.id);
     });
-    var titleBar = `\n\n>\tFound ${c.green}${result.length}${c.end} notes with criteria "${crit}" as shown above.`
-    console.log(commonSeperationLine + result.join('\n') + titleBar);
+    var titleBar = `\n\n>\tFound ${c.green}${result.length}${c.end} notes with criteria "${c.green}${crits.join(' ')}${c.end}" as shown above.`
+    console.log(commonSeperationLine + result.join('\n') + commonSeperationLine + titleBar);
 };
 
 app.tags = function () {
@@ -357,7 +361,7 @@ app.tags = function () {
         return `${rightpad(tagInfo.name, 16, ' ')}${c.green}${tagInfo.count}${c.end}`;
     });
     var titleBar = `\n\n>\tFound ${c.green}${result.length}${c.end} tags as shown above.`
-    console.log(`Tag             Count` + commonSeperationLine + result.join('\n') + titleBar);
+    console.log(`Tag             Count` + commonSeperationLine + result.join('\n') + commonSeperationLine + titleBar);
 };
 
 app.build = function () {
@@ -415,7 +419,7 @@ app.build = function () {
     }));
     // Tags
     var tagItemsInTagsPage = nottyDatabase.tags_index.map(function (tagObj) { // tagObj = { name: 'tag', count: 1 }
-        var tagDetailPageContent = nottyDatabase.notes_index.filter(noteObj => noteObj.md_Tags.indexOf(tagObj.name) > -1).map(function (noteInfo) {
+        var tagDetailPageContent = nottyDatabase.notes_index.slice(0).reverse().filter(noteObj => noteObj.md_Tags.indexOf(tagObj.name) > -1).map(function (noteInfo) {
             var noteHtml = core.renderHtml(html.item_note, {
                 __ID__: noteInfo.id,
                 __TIME__: getTimeStringForNote(noteInfo.id),
@@ -430,7 +434,7 @@ app.build = function () {
             __TAG__: tagObj.name.toLowerCase(),
             __COUNT__: tagObj.count,
             __CONTENT__: tagDetailPageContent,
-        }))
+        }));
         return core.renderHtml(html.item_tag, {
             __TAG__: tagObj.name.toLowerCase(),
             __COUNT__: tagObj.count
@@ -468,6 +472,7 @@ const subcommandMapTable = {
     p: 'print',
 
     find: 'find',
+    f: 'find',
 
     tags: 'tags',
 
