@@ -276,7 +276,7 @@ app.ls = function () {
     var result = nottyDatabase.notes_index.map(function (x, i) {
         return core.noteSummaryPlain(core.parseNoteDbInfoByObj(x), x.id);
     });
-    var titleBar = `\n\n>\tFound ${result.length} notes as shown above.`
+    var titleBar = `\n\n>\tFound ${result.length} notes as shown below.`
     fs.writeFileSync('.notty-ls', titleBar + commonSeperationLine + result.join('\n') + commonSeperationLine + '[EOF]');
     var child = child_process.spawn('less', [`.notty-ls`], {
         stdio: 'inherit'
