@@ -51,7 +51,7 @@ const ulog = function (str) {
 // Templates
 // ----------------------------------------
 
-const noteDefaultText = `Title: This is an optional title\nTags: tag1 tag2\n------\n\nUse 6 hyphens to declare metadata area. Omitting metadata is ok.`;
+const noteDefaultText = `Title: Untitled\nTags: tag1 tag2\n------\n\nUse 6 hyphens to declare metadata area. Omitting metadata is ok.`;
 
 const commonSeperationLine = '\n--------------------------------\n';
 
@@ -204,6 +204,12 @@ core.noteSummaryStd = function (noteObj, noteId) {
         `Tags:    ${noteObj.md_Tags.map(x => c.yellow + x + c.end).join('  ')}\n`
     ].join('\n');
 };
+core.noteSummaryPlain = function (noteObj, noteId) {
+    return [
+        `[${noteId}]  ${noteObj.title}`,
+        `Tags:    ${noteObj.md_Tags.join('  ')}\n`
+    ].join('\n');
+};
 
 // ----------------------------------------
 // Handlers
@@ -268,10 +274,16 @@ app.ls = function () {
     var noteId = core.timenow();
     core.loadDatabase();
     var result = nottyDatabase.notes_index.map(function (x, i) {
-        return core.noteSummaryStd(core.parseNoteDbInfoByObj(x), x.id);
+        return core.noteSummaryPlain(core.parseNoteDbInfoByObj(x), x.id);
     });
-    var titleBar = `\n\n>\tFound ${c.green}${result.length}${c.end} notes as shown above.`
-    console.log(commonSeperationLine + result.join('\n') + commonSeperationLine + titleBar);
+    var titleBar = `\n\n>\tFound ${result.length} notes as shown above.`
+    fs.writeFileSync('.notty-ls', titleBar + commonSeperationLine + result.join('\n') + commonSeperationLine + '[EOF]');
+    var child = child_process.spawn('less', [`.notty-ls`], {
+        stdio: 'inherit'
+    });
+    child.on('exit', function (e, code) {
+        exec(`rm .notty-ls;`);
+    });
 };
 
 app.new = function () {
