@@ -409,7 +409,7 @@ app.build = function () {
             __TITLE__: noteObj.title,
             __SITENAME__: config.name,
             __TAGS__: noteObj.md_Tags.map(tag => core.renderHtml(html.inline_tag, {__TAG__: tag.toLowerCase()})).join(''),
-            __CONTENT__: noteObj.content.trim().replace(/\n+/g, '\n').split('\n').map(x => `<p>${x}</p>`).join('')
+            __CONTENT__: require('markdown-it')().render(noteObj.content.trim())
         });
         fs.writeFileSync(`www/notes/${noteId}.html`, noteHtml);
     });

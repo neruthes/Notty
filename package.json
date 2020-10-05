@@ -1,6 +1,6 @@
 {
   "name": "notty",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "CLI notebook app",
   "main": "index.js",
   "bin": {
@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/neruthes/Notty/issues"
   },
-  "homepage": "https://github.com/neruthes/Notty#readme"
+  "homepage": "https://github.com/neruthes/Notty#readme",
+  "dependencies": {
+    "markdown-it": "^11.0.1"
+  }
 }
