@@ -440,7 +440,7 @@ app.build = function () {
             });
             return noteHtml;
         }).join('');
-        fs.writeFileSync(`www/tag/${tagObj.name}.html`, core.renderHtml(html.tag, {
+        fs.writeFileSync(`www/tags/${tagObj.name}.html`, core.renderHtml(html.tag, {
             __VER__: pkg.version,
             __SITENAME__: config.name,
             __TAG__: tagObj.name.toLowerCase(),
